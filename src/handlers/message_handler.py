@@ -24,7 +24,14 @@ class MessageManager:
             chat_id=update.effective_chat.id, action="typing"
         )
 
+        analyzing_message = await update.message.reply_text(
+            "🔍 Analyzing the coin\\.\\.\\.",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+
         success, text, plots = self.api_service.get_analysis(query)
+
+        await analyzing_message.delete()
 
         text=telegramify_markdown.markdownify(
             text,
