@@ -3,6 +3,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 import telegramify_markdown
 
+from src.models.modes import Modes
 from src.services.api_service import AnalysisAPIService
 from src.utils.logger import get_logger
 
@@ -13,9 +14,21 @@ class MessageManager:
     def __init__(self):
         self.api_service = AnalysisAPIService()
 
+    async def handle_message(
+            self,
+        update: Update, context: ContextTypes.DEFAULT_TYPE, mode: Modes
+    ) -> None:
+        """Handle common message with mode
+
+        Args:
+            update: The update object from Telegram
+            context: The context object from Telegram
+        """
+        await self.handle_analysis_query(update=update, context=context)
+
     async def handle_analysis_query(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    ) -> None:
         """Handle user queries for crypto analysis"""
 
         query = update.message.text
@@ -46,4 +59,4 @@ class MessageManager:
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
 
 
-message_handler = MessageManager().handle_analysis_query
+message_handler = MessageManager()
