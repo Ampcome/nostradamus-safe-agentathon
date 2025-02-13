@@ -1,6 +1,11 @@
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
+import telegramify_markdown
+
+from src.models.modes import Modes
+from telegram.constants import ChatType
+from src.handlers.message_handler import message_handler
 
 
 class CommandManager:
@@ -47,6 +52,49 @@ class CommandManager:
             "❗ Queries without $ symbol or valid address will not be processed"
         )
         await update.message.reply_text(help_message, parse_mode=ParseMode.MARKDOWN_V2)
+
+    
+    async def command_activate(
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        mode: Modes,
+        example: str | None = None,
+    ) -> None:
+        """Handles mode activation and prompts user for input."""
+        if update.effective_chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+            await message_handler.handle_message(update=update, context=context, mode=mode)
+            return
+
+        # Handle callback query first if it exists
+        message = (
+            f"💬 {mode.value} Mode enabled. type further queries\n"
+            f"\nExample: *{example}*\n"
+            if example
+            else ""
+        ) + "\nEnter /stop_mode to switch to normal mode"
+
+        if update.callback_query:
+            await update.callback_query.answer()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=telegramify_markdown.markdownify(
+                    message,
+                    max_line_length=None,
+                    normalize_whitespace=False,
+                ),
+                parse_mode=ParseMode.MARKDOWN_V2,
+            )
+        else:
+            await update.message.reply_text(
+                text=telegramify_markdown.markdownify(
+                    message,
+                    max_line_length=None,
+                    normalize_whitespace=False,
+                ),
+                parse_mode=ParseMode.MARKDOWN_V2,
+            )
+
+        context.user_data["mode"] = mode
 
 
 commad_manager = CommandManager()
