@@ -1,10 +1,9 @@
 from telegram import Update
-from telegram.ext import Application, ContextTypes, CommandHandler
-from telegram.constants import  ParseMode
+from telegram.constants import ParseMode
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 
 class CommandManager:
-    
     def set_handlers(self, application: Application):
         application.add_handler(CommandHandler("start", self._start_command))
 
@@ -25,7 +24,10 @@ class CommandManager:
             "\\- 0x742d35Cc6634C0532925a3b844Bc454e4438f44e analysis\n\n"
             "Type /help for more information\\."
         )
-        await update.message.reply_text(welcome_message, parse_mode=ParseMode.MARKDOWN_V2,)
+        await update.message.reply_text(
+            welcome_message,
+            parse_mode=ParseMode.MARKDOWN_V2,
+        )
 
     async def _help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /help command"""
