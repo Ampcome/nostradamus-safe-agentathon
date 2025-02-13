@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+import telegramify_markdown
 
 from src.services.api_service import AnalysisAPIService
 from src.utils.logger import get_logger
@@ -25,11 +26,17 @@ class MessageManager:
 
         success, text, plots = self.api_service.get_analysis(query)
 
+        text=telegramify_markdown.markdownify(
+            text,
+            max_line_length=None,
+            normalize_whitespace=False,
+        )
+
         if not success:
-            await update.message.reply_text(f"❌ {text}", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_text(f"❌ {text}", parse_mode=ParseMode.MARKDOWN_V2)
             return
 
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
 
 
 message_handler = MessageManager().handle_analysis_query
