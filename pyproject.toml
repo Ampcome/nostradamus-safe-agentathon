@@ -6,6 +6,12 @@ authors = ["ihsan <ihsan.m@ampcome.com>"]
 package-mode = false
 [tool.poetry.dependencies]
 python = "^3.12"
+pydantic = "^2.10.6"
+pydantic-settings = "^2.7.1"
+python-telegram-bot = "^21.10"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.9.6"
 
 [oetry.group.dev.dependencies]
 
