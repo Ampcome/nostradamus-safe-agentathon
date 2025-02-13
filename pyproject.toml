@@ -13,7 +13,8 @@ python-telegram-bot = "^21.10"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.9.6"
 
-[oetry.group.dev.dependencies]
+[poetry.group.dev.dependencies]
+optional = true
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]

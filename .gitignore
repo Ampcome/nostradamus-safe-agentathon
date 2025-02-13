@@ -181,3 +181,6 @@ Thumbs.db
 
 # PyPI configuration file
 .pypirc
+
+# data
+bot_data
