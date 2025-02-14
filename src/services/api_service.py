@@ -19,7 +19,7 @@ class AnalysisAPIService:
         """
         try:
             response = requests.post(
-                f"{self.base_url}/chat/response",
+                f"{self.base_url}/addon/response",
                 json={"query": query},
                 headers=self.headers,
             )
@@ -34,6 +34,21 @@ class AnalysisAPIService:
                 "Sorry, there was an error connecting to the analysis service.",
                 None,
             )
+
+    def get_plot_image(self, hash_string: str) -> Optional[bytes]:
+        """
+        Fetch plot image by hash string
+        Returns: Image bytes if successful, None otherwise
+        """
+        try:
+            response = requests.get(
+                f"{self.base_url}/addon/plot_image/{hash_string}", headers=self.headers
+            )
+            response.raise_for_status()
+            return response.content
+        except requests.RequestException as e:
+            logging.error(f"Error fetching plot image {hash_string}: {str(e)}")
+            return None
 
     def get_confidence_score(self, symbol: str) -> Tuple[bool, dict | str]:
         """
