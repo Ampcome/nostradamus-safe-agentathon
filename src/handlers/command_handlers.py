@@ -20,12 +20,16 @@ class CommandManager:
         application.add_handler(
             CommandHandler(Commands.START.value, self._start_command)
         )
+        
 
         application.add_handler(CommandHandler(Commands.HELP.value, self._help_command))
-
+        application.add_handler(
+            CommandHandler(Commands.CHECK_MODE.value, self.check_mode)
+        )
         application.add_handler(
             CommandHandler(Commands.STOP_MODE.value, self.remove_mode)
         )
+       
 
         # Modes
         application.add_handler(
@@ -91,21 +95,24 @@ class CommandManager:
     async def _help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /help command"""
         help_message = (
-            "🤖 *Crypto Analysis Bot Help*\n\n"
-            "*Query Format:*\n"
-            "1\\. Use $ symbol followed by coin symbol \\($btc, $eth\\)\n"
-            "2\\. Or use a valid cryptocurrency address\n\n"
-            "*Available Commands:*\n"
-            "/start \\- Start the bot\n"
-            "/help \\- Show this help message\n\n"
-            "*Example Queries:*\n"
-            "\\- $btc price prediction\n"
-            "\\- $eth market analysis\n"
-            "\\- $sol technical indicators\n"
-            "\\- 0x742d35Cc6634C0532925a3b844Bc454e4438f44e\n\n"
-            "❗ Queries without $ symbol or valid address will not be processed"
+            "🚀 *Available Commands* 📚\n\n"
+            "*Basic Commands*\n"
+            "• /start - Start the bot\n"
+            "• /help - Show this help message\n"
+            "• /about - About this bot\n"
+            "*AI & Analysis*\n"
+            "• /crypto - Get AI-powered crypto analysis\n"
+            "• /technical - Get technical analysis\n"
+            "• /crypto_info - Get detailed coin information\n"
+            "• /confidence - Get AI confidence score\n"
+            "• /price - Get recent price information\n"
+            "*Utility Commands*\n"
+            "• /mode - Check current mode\n"
+            "• /stop_mode - Stop current mode\n\n"
+            "_Use the buttons below for quick access:_"
         )
-        await update.message.reply_text(help_message, parse_mode=ParseMode.MARKDOWN_V2)
+
+        await update.message.reply_text(markdownify(help_message), parse_mode=ParseMode.MARKDOWN_V2)
 
     async def command_activate(
         self,
@@ -149,6 +156,25 @@ class CommandManager:
             )
 
         context.user_data["mode"] = mode
+
+    
+    async def check_mode(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+    ) -> None:
+        """Check the current mode"""
+        mode: Modes = context.user_data.get("mode")
+        if not mode:
+            message = "No mode has been activated"
+        else:
+            message = f"You are in *{mode.value} mode*"
+        message += "\n\nType /help to see all commands!"
+        await update.effective_message.reply_text(
+            text=markdownify(message),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=get_inline_coin_keyboard(),
+        )    
 
     async def remove_mode(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
