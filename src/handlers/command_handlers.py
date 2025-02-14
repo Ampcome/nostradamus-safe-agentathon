@@ -60,6 +60,13 @@ class CommandManager:
             )
         )
 
+        application.add_handler(
+            CommandHandler(
+                Commands.PRICE_ENABLE.value,
+                partial(self.command_activate, mode=Modes.PRICE, example="SOL"),
+            )
+        )
+
     async def _start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /start command"""
         welcome_message = (

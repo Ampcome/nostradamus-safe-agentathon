@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import telegramify_markdown
 
 from src.models.confidace_score import ConfidenceScore
@@ -206,6 +208,42 @@ def format_technical_analysis(ta_dict: dict) -> str:
         "• Past performance is not indicative of future results"
     )
     message += disclaimer
+
+    return message
+
+
+def format_price_data(data: dict) -> str:
+    """
+    Format cryptocurrency data for Telegram message with emojis
+
+    Args:
+        data (dict): Dictionary containing cryptocurrency data
+
+    Returns:
+        str: Formatted message for Telegram
+    """
+    # Convert timestamp to readable format
+    timestamp = datetime.fromtimestamp(data["last_updated_at"])
+    formatted_time = timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # Format numbers
+    # Format price with up to 8 decimal places, removing trailing zeros
+    price = "{:,.8g}".format(data["usd"]).rstrip("0").rstrip(".")
+    market_cap = "{:,.0f}".format(data["usd_market_cap"])
+    volume = "{:,.0f}".format(data["usd_24h_vol"])
+    change = "{:,.2f}".format(data["usd_24h_change"])
+
+    # Determine trend emoji
+    trend_emoji = "📈" if data["usd_24h_change"] > 0 else "📉"
+
+    # Create message
+    message = f"""💰 *{data["coin_id"].upper()} Update*
+
+💵 Price: ${price}
+📊 24h Change: {change}% {trend_emoji}
+🌐 Market Cap: ${market_cap}
+📈 24h Volume: ${volume}
+🕒 Last Updated: {formatted_time}"""
 
     return message
 

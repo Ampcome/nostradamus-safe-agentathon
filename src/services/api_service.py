@@ -25,6 +25,7 @@ class AnalysisAPIService:
             )
             response.raise_for_status()
             data = response.json()
+            print(f"resp;:{data}")
             return data.get("success"), data.get("text"), data.get("plots")
         except requests.RequestException as e:
             logging.error(f"API Error: {str(e)}")
@@ -76,7 +77,7 @@ class AnalysisAPIService:
                 "Sorry, there was an error connecting to the analysis service.",
             )
 
-    def get_crypto_info(self, symbol: str) -> Tuple[bool, dict | str]:
+    def get_crypto_info(self, symbol: str) -> Tuple[bool, str]:
         """
         Fetch crypto_info from the API
         Returns: (success, text)
@@ -90,6 +91,27 @@ class AnalysisAPIService:
             response.raise_for_status()
             data = response.json()
             return data.get("success"), data.get("text")
+        except requests.RequestException as e:
+            logging.error(f"API Error: {str(e)}")
+            return (
+                False,
+                "Sorry, there was an error connecting to the analysis service.",
+            )
+
+    def get_price_info(self, symbol: str) -> Tuple[bool, dict | str]:
+        """
+        Fetch price_info from the API
+        Returns: (success, data)
+        """
+        try:
+            response = requests.post(
+                f"{self.base_url}/addon/price_info",
+                json={"symbol": symbol},
+                headers=self.headers,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success"), data.get("data")
         except requests.RequestException as e:
             logging.error(f"API Error: {str(e)}")
             return (

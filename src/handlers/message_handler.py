@@ -10,6 +10,7 @@ from src.utils.logger import get_logger
 from src.utils.markdown import split_markdown
 from src.utils.string_formatters import (
     format_confidence_score,
+    format_price_data,
     format_technical_analysis,
     markdownify,
 )
@@ -45,6 +46,7 @@ class MessageManager:
             Modes.CONFIDENCE: self.confidence_inference,
             Modes.TECHNICAL: self.technical_inference,
             Modes.CRYPTO_INFO: self.crypto_info,
+            Modes.PRICE: self.price_inference,
         }
 
         hanndler = handlers.get(mode, self.handle_analysis_query)
@@ -264,6 +266,50 @@ class MessageManager:
                     if idx == (total_messages - 1)
                     else None,
                 )
+
+        except Exception as e:
+            raise e
+
+    async def price_inference(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Get Price information"""
+        reply_message = await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="🔍 Analyzing the coin...",
+            reply_to_message_id=update.effective_message.id,
+        )
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id, action=ChatAction.TYPING
+        )
+        symbol = update.effective_message.text.strip()
+        if symbol.startswith("/"):
+            symbol = " ".join(symbol.split()[1:])
+
+        if not symbol:
+            await context.bot.send_message(
+                text="❌ please add a coin",
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                reply_markup=get_inline_coin_keyboard(update=update),
+            )
+            return
+        try:
+            success, data = self.api_service.get_price_info(symbol=symbol)
+            message = format_price_data(data)
+            await reply_message.delete()
+            if not success:
+                await update.message.reply_text(
+                    markdownify(f"❌ {data}"), parse_mode=ParseMode.MARKDOWN_V2
+                )
+                return
+
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdownify(message),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=get_inline_coin_keyboard(),
+            )
 
         except Exception as e:
             raise e
