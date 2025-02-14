@@ -42,7 +42,7 @@ class AnalysisAPIService:
         """
         try:
             response = requests.post(
-                f"{self.base_url}/confidence_score",
+                f"{self.base_url}/addon/confidence_score",
                 json={"symbol": symbol},
                 headers=self.headers,
             )
@@ -63,7 +63,7 @@ class AnalysisAPIService:
         """
         try:
             response = requests.post(
-                f"{self.base_url}/technical_analysis",
+                f"{self.base_url}/addon/technical",
                 json={"symbol": symbol},
                 headers=self.headers,
             )
@@ -84,13 +84,13 @@ class AnalysisAPIService:
         """
         try:
             response = requests.post(
-                f"{self.base_url}/crypto_info",
+                f"{self.base_url}/addon/coin_info",
                 json={"symbol": symbol},
                 headers=self.headers,
             )
             response.raise_for_status()
             data = response.json()
-            return data.get("success"), data.get("text")
+            return data.get("success"), data.get("data")
         except requests.RequestException as e:
             logging.error(f"API Error: {str(e)}")
             return (
