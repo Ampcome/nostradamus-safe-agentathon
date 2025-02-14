@@ -1,0 +1,9 @@
+services:
+  telegram:
+    build: .
+    container_name: nostradamus-telegram
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./app:/app/app
