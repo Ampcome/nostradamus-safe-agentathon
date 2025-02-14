@@ -91,9 +91,7 @@ class MessageManager:
     ) -> None:
         """Handle user queries for crypto analysis"""
 
-        query = update.message.text
-
-        analyzing_message = await update.message.reply_text(
+        analyzing_message = await update.effective_message.reply_text(
             "🔍 Analyzing the coin\\.\\.\\.", parse_mode=ParseMode.MARKDOWN_V2
         )
 
@@ -113,7 +111,7 @@ class MessageManager:
             )
             return
 
-        success, text, plot_hashes = self.api_service.get_analysis(query)
+        success, text, plot_hashes = self.api_service.get_analysis(message)
 
         await analyzing_message.delete()
 
