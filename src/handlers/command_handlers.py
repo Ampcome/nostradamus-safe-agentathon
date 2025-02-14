@@ -158,29 +158,69 @@ class CommandManager:
                 parse_mode=ParseMode.MARKDOWN,
             )
 
-    async def _help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /help command"""
-        help_message = (
-            "🚀 *Available Commands* 📚\n\n"
-            "*Basic Commands*\n"
-            "• /start - Start the bot\n"
-            "• /help - Show this help message\n"
-            "• /about - About this bot\n"
-            "• /nostradamus - Learn about Nostradamus\n\n"
-            "*AI & Analysis*\n"
-            "• /crypto - Get AI-powered crypto analysis\n"
-            "• /technical - Get technical analysis\n"
-            "• /crypto_info - Get detailed coin information\n"
-            "• /confidence - Get AI confidence score\n"
-            "• /price - Get recent price information\n"
-            "\n*Utility Commands*\n"
-            "• /mode - Check current mode\n"
-            "• /stop_mode - Stop current mode\n\n"
-            "_Use the buttons below for quick access:_"
-        )
+    async def _help_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Show help information about the bot.
+
+        Command: /help
+        Description: Displays a list of available commands based on chat type.
+        """
+        chat_type = update.effective_chat.type
+
+        if chat_type == ChatType.PRIVATE:
+            help_text = (
+                "🚀 *Available Commands* 📚\n\n"
+                "*Basic Commands*\n"
+                "• /start - Start the bot\n"
+                "• /help - Show this help message\n"
+                "• /about - About this bot\n"
+                "• /nostradamus - Learn about Nostradamus\n\n"
+                "*AI & Analysis*\n"
+                "• /crypto - Get AI-powered crypto analysis\n"
+                "• /technical - Get technical analysis\n"
+                "• /crypto_info - Get detailed coin information\n"
+                "• /confidence - Get AI confidence score\n"
+                "• /price - Get recent price information\n"
+                "\n*Utility Commands*\n"
+                "• /mode - Check current mode\n"
+                "• /stop_mode - Stop current mode\n\n"
+                "_Use the buttons below for quick access:_"
+            )
+            keyboard = [
+                [
+                    InlineKeyboardButton("🤖 Start Analysis", callback_data="crypto"),
+                    InlineKeyboardButton(
+                        "🌐 Nostradamus", url="https://www.projectnostradamus.com/"
+                    ),
+                ],
+            ]
+        else:
+            help_text = (
+                "👋 *Available Commands*\n\n"
+                "*Basic Commands*\n"
+                "• /start - Start the bot\n"
+                "• /help - Show this help message\n"
+                "• /about - About this bot\n"
+                "• /nostradamus - About Nostradamus\n\n"
+                "*Analysis Commands*\n"
+                "• /crypto - AI-powered crypto analysis\n"
+                "• /technical - Technical analysis\n"
+                "• /confidence - AI confidence score\n"
+                "• /crypto_info - Get coin information\n"
+                "• /price - Get recent price information\n"
+                "\n*Utility Commands*\n"
+                "• /mode - Check current mode\n"
+                "• /stop_mode - Stop current mode\n\n"
+            )
+            keyboard = [[]]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            markdownify(help_message), parse_mode=ParseMode.MARKDOWN_V2
+            text=markdownify(help_text),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=reply_markup,
         )
 
     async def about_command(

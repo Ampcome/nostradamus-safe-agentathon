@@ -189,6 +189,7 @@ class MessageManager:
             symbol = " ".join(symbol.split()[1:])
 
         if not symbol:
+            await reply_message.delete()
             await context.bot.send_message(
                 text="❌ please add a coin",
                 chat_id=update.effective_chat.id,
@@ -244,6 +245,7 @@ class MessageManager:
             symbol = " ".join(symbol.split()[1:])
 
         if not symbol:
+            await reply_message.delete()
             await context.bot.send_message(
                 text="❌ please add a coin",
                 chat_id=update.effective_chat.id,
@@ -291,6 +293,7 @@ class MessageManager:
             symbol = " ".join(symbol.split()[1:])
 
         if not symbol:
+            await reply_message.delete()
             await context.bot.send_message(
                 text="❌ please add a coin",
                 chat_id=update.effective_chat.id,
@@ -340,6 +343,7 @@ class MessageManager:
             symbol = " ".join(symbol.split()[1:])
 
         if not symbol:
+            await reply_message.delete()
             await context.bot.send_message(
                 text="❌ please add a coin",
                 chat_id=update.effective_chat.id,
