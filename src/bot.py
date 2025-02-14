@@ -45,7 +45,9 @@ class CryptoAnalysisBot:
         commad_manager.set_handlers(self.application)
 
         self.application.add_handler(
-            MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_message)
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND, message_handler.handle_private_message
+            )
         )
 
     def run(self):

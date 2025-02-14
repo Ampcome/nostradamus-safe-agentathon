@@ -10,7 +10,6 @@ class Commands(str, Enum):
     START = "start"
     HELP = "help"
     ABOUT = "about"
-    NOSTRADAMUS = "nostradamus"
     STOP_MODE = "stop_mode"
     CHECK_MODE = "mode"
 
@@ -20,4 +19,3 @@ class Commands(str, Enum):
     TECHNICALS_ENABLE = "technical"
     CRYPTOINFO_ENABLE = "crypto_info"
     PRICE_ENABLE = "price"
-    RESEARCH_ENABLE = "research"

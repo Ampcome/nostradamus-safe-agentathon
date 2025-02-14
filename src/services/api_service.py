@@ -33,3 +33,24 @@ class AnalysisAPIService:
                 "Sorry, there was an error connecting to the analysis service.",
                 None,
             )
+
+    def get_confidence_score(self, symbol: str) -> Tuple[bool, dict | str]:
+        """
+        Fetch get_confidence_score from the API
+        Returns: (success, data)
+        """
+        try:
+            response = requests.post(
+                f"{self.base_url}/confidence_score",
+                json={"symbol": symbol},
+                headers=self.headers,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success"), data.get("data")
+        except requests.RequestException as e:
+            logging.error(f"API Error: {str(e)}")
+            return (
+                False,
+                "Sorry, there was an error connecting to the analysis service.",
+            )

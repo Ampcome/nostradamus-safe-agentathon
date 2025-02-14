@@ -181,6 +181,6 @@ Thumbs.db
 
 # PyPI configuration file
 .pypirc
-
+pyrightconfig.json
 # data
 bot_data
