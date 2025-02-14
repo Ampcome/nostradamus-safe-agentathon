@@ -3,7 +3,11 @@ name = "nostradamus"
 version = "0.1.0"
 description = ""
 authors = ["ihsan <ihsan.m@ampcome.com>"]
-package-mode = false
+package-mode = true
+packages = [
+    {include ="src"},
+]
+
 [tool.poetry.dependencies]
 python = "^3.12"
 pydantic = "^2.10.6"
