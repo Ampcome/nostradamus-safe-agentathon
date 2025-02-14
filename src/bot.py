@@ -2,15 +2,16 @@ from pathlib import Path
 
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     MessageHandler,
     PicklePersistence,
     filters,
-    CallbackQueryHandler,
 )
 
 from src.core.cofig import settings
 from src.handlers import error_handler
-from src.handlers.command_handlers import commad_manager
+from src.handlers.callback_qery_handlers import ai_button_handler
+from src.handlers.command_handlers import command_manager
 from src.handlers.message_handler import message_handler
 from src.utils.logger import get_logger
 
@@ -21,7 +22,7 @@ class CryptoAnalysisBot:
     def __init__(self):
         self.application = self._build_application()
 
-        self.__set__hadlers()
+        self._set__hadlers()
 
     def _build_application(self):
         percistance_file_path = Path(settings.BOT_PERCISTANCE_FILE_PATH)
@@ -41,17 +42,20 @@ class CryptoAnalysisBot:
 
         return application
 
-    def __set__hadlers(self):
+    def _set__hadlers(self):
         self.application.add_error_handler(error_handler)
-        commad_manager.set_handlers(self.application)
+        command_manager.set_handlers(self.application)
 
         self.application.add_handler(
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND, message_handler.handle_private_message
             )
         )
-        self.application.add_handler(
-            CallbackQueryHandler(commad_manager.remove_mode, pattern="stop_mode")
+        self.application.add_handler(CallbackQueryHandler(ai_button_handler))
+
+        #  Initialize bot jobs
+        self.application.job_queue.run_once(
+            command_manager.setup_commands, when=settings.SCHEDULER_TIMOUT
         )
 
     def run(self):

@@ -67,137 +67,160 @@ def format_confidence_score(score: ConfidenceScore) -> str:
 
 def format_technical_analysis(ta_dict: dict) -> str:
     """
-    Format technical analysis data from a dictionary into a readable Telegram message.
+    Format technical analysis dictionary data into a readable Telegram message with bullet points and emojis.
 
     Args:
-        ta_dict: Dictionary containing the technical analysis data
+        ta_dict: Dictionary containing the technical analysis data from backend
 
     Returns:
         str: Formatted message ready to be sent via Telegram
     """
 
-    def format_float(value: float) -> str:
-        """Format float values with 2 decimal places"""
+    def format_float(value: float | None) -> str:
+        """Format float values with appropriate decimal places"""
         return f"{value:.8g}" if value is not None else "N/A"
-
-    def safe_get(key: str, default="N/A"):
-        """Safely get value from dictionary"""
-        return ta_dict.get(key, default)
 
     # Build the message sections
     sections = []
 
     # Basic Information
     basic_info = [
-        f"📊 *Technical Analysis for {safe_get('symbol')}*\n",
-        f"{'🏢 Name: ' + safe_get('name') if safe_get('name') else ''}",
-        f"📅 Period: {safe_get('start_date')} to {safe_get('end_date')}\n",
+        f"📊 *Technical Analysis for {ta_dict['basic_information']['identifiers']['symbol']}*\n",
+        f"{'🏢 Name: ' + ta_dict['basic_information']['identifiers'].get('name', '')}",
+        (
+            f"📅 Period: {ta_dict['basic_information']['analysis_period']['start_date']} to "
+            f"{ta_dict['basic_information']['analysis_period']['end_date']}\n"
+        ),
     ]
     sections.append("\n".join(filter(None, basic_info)))
 
     # Price Information
+    price_metrics = ta_dict["price_metrics"]
     price_info = [
         "💰 *Price Information*\n",
-        f"• 💵 Current Price: ${format_float(safe_get('current_price'))}",
+        f"• 💵 Current Price: ${format_float(price_metrics['current_price_usd'])}",
         "• 📊 Daily Range:",
-        f"  ↓ Low: ${format_float(safe_get('daily_low'))}",
-        f"  ↑ High: ${format_float(safe_get('daily_high'))}",
-        f"• 📈 Volume: {format_float(safe_get('daily_volume'))}",
-        f"• ⏰ 24h Change: {format_float(safe_get('price_change_24h'))}%",
-        f"• 📅 7d Change: {format_float(safe_get('price_change_7d'))}%\n",
+        f"  ↓ Low: ${format_float(price_metrics['daily_range']['low_usd'])}",
+        f"  ↑ High: ${format_float(price_metrics['daily_range']['high_usd'])}",
+        f"• 📈 Volume: {format_float(price_metrics['volume']['daily_volume_usd'])}",
+        f"• 📊 Volume Change 7d: {price_metrics['volume']['volume_change_7d_percent']}%",
     ]
-    sections.append("\n".join(price_info))
+
+    if "price_changes" in price_metrics:
+        if "change_24h_percent" in price_metrics["price_changes"]:
+            price_info.append(
+                f"• ⏰ 24h Change: {price_metrics['price_changes']['change_24h_percent']}%"
+            )
+        price_info.append(
+            f"• 📅 7d Change: {price_metrics['price_changes']['change_7d_percent']}%"
+        )
+
+    sections.append("\n".join(price_info) + "\n")
 
     # Moving Averages
+    ma_data = ta_dict["moving_averages"]
     ma_info = [
         "📈 *Moving Averages*\n",
-        f"• 📊 SMA20: ${format_float(safe_get('sma_20'))}",
-        f"• 📉 SMA200: ${format_float(safe_get('sma_200'))}",
-        f"• 📈 EMA8: ${format_float(safe_get('ema_8'))}",
-        f"• 📊 EMA20: ${format_float(safe_get('ema_20'))}\n",
+        f"• 📊 SMA20: ${format_float(ma_data['simple_moving_averages']['sma_20_usd'])}",
+        f"• 📉 SMA200: ${format_float(ma_data['simple_moving_averages']['sma_200_usd'])}",
+        f"• 📈 EMA8: ${format_float(ma_data['exponential_moving_averages']['ema_8_usd'])}",
+        f"• 📊 EMA20: ${format_float(ma_data['exponential_moving_averages']['ema_20_usd'])}\n",
     ]
     sections.append("\n".join(ma_info))
 
     # Momentum Indicators
+    momentum = ta_dict["momentum_indicators"]
     momentum_info = [
         "🔄 *Momentum Indicators*\n",
-        f"• 🔋 RSI: {format_float(safe_get('rsi'))}",
-        f"• 💹 MFI: {format_float(safe_get('mfi'))}",
-        f"• 📊 CCI: {format_float(safe_get('cci'))}",
-        f"• 📈 RMI: {format_float(safe_get('rmi'))}\n",
+        f"• 🔋 RSI: {format_float(momentum['relative_strength_index'])}",
+        f"• 💹 MFI: {format_float(momentum['money_flow_index'])}",
+        f"• 📊 CCI: {format_float(momentum['commodity_channel_index'])}",
+        f"• 📈 RMI: {format_float(momentum['relative_momentum_indicator'])}\n",
     ]
     sections.append("\n".join(momentum_info))
 
     # MACD
+    macd_data = ta_dict["trend_indicators"]["macd"]
     macd_info = [
         "📊 *MACD Analysis*\n",
-        f"• 📈 MACD Line: {format_float(safe_get('macd'))}",
-        f"• 📉 Signal Line: {format_float(safe_get('macd_signal'))}",
-        f"• 📊 Histogram: {format_float(safe_get('macd_histogram'))}\n",
+        f"• 📈 MACD Line: {format_float(macd_data['macd_line'])}",
+        f"• 📉 Signal Line: {format_float(macd_data['signal_line'])}",
+        f"• 📊 Histogram: {format_float(macd_data['histogram'])}\n",
     ]
     sections.append("\n".join(macd_info))
 
     # Bollinger Bands
+    bb_data = ta_dict["volatility_indicators"]["bollinger_bands"]
     bb_info = [
         "📏 *Bollinger Bands*\n",
-        f"• ⬆️ Upper Band: ${format_float(safe_get('bollinger_upper'))}",
-        f"• ➖ Middle Band: ${format_float(safe_get('bollinger_middle'))}",
-        f"• ⬇️ Lower Band: ${format_float(safe_get('bollinger_lower'))}\n",
+        f"• ⬆️ Upper Band: ${format_float(bb_data['upper_band_usd'])}",
+        f"• ➖ Middle Band: ${format_float(bb_data['middle_band_usd'])}",
+        f"• ⬇️ Lower Band: ${format_float(bb_data['lower_band_usd'])}\n",
     ]
     sections.append("\n".join(bb_info))
 
     # Trend Indicators
+    trend_data = ta_dict["trend_indicators"]
     trend_info = [
         "📈 *Trend Indicators*\n",
-        f"• 🎯 ADX: {format_float(safe_get('adx'))}",
-        f"• ⬆️ DI+: {format_float(safe_get('plus_di'))}",
-        f"• ⬇️ DI-: {format_float(safe_get('minus_di'))}",
+        f"• 🎯 ADX: {format_float(trend_data['directional_system']['average_directional_index'])}",
+        f"• ⬆️ DI+: {format_float(trend_data['directional_system']['positive_directional_indicator'])}",
+        f"• ⬇️ DI-: {format_float(trend_data['directional_system']['negative_directional_indicator'])}",
+        f"• 🔄 Super Trend: {trend_data['super_trend']['direction'].upper()}",
+        f"  💹 Value: ${format_float(trend_data['super_trend']['value'])}\n",
     ]
-
-    # Add Super Trend if available
-    if "super_trend_direction" in ta_dict:
-        trend_info.extend(
-            [
-                f"• 🔄 Super Trend: {safe_get('super_trend_direction', '').upper()}",
-                f"  💹 Value: ${format_float(safe_get('super_trend'))}\n",
-            ]
-        )
     sections.append("\n".join(trend_info))
 
     # Market Sentiment
-    if any(key in ta_dict for key in ["fear_greed_index", "fear_greed_sentiment"]):
-        sentiment_info = [
-            "🎭 *Market Sentiment*\n",
-            f"• 📊 Fear & Greed Index: {format_float(safe_get('fear_greed_index'))}",
-            f"• 🔍 Sentiment: {safe_get('fear_greed_sentiment')}\n",
-        ]
-        sections.append("\n".join(sentiment_info))
+    market_condition = ta_dict["market_condition"]
+    sentiment_info = [
+        "🎭 *Market Sentiment*\n",
+        f"• 📊 Fear & Greed Index: {format_float(market_condition['sentiment']['fear_greed_index'])}",
+        f"• 🔍 Sentiment: {market_condition['sentiment']['fear_greed_interpretation']}\n",
+    ]
+    sections.append("\n".join(sentiment_info))
 
     # Technical Signals
-    if "signals_report" in ta_dict:
-        sections.append(f"📑 *Technical Signals*\n• {safe_get('signals_report')}\n")
+    if ta_dict.get("technical_signals"):
+        signals = []
+        for signal in ta_dict["technical_signals"]:
+            signals.append(
+                f"• {signal['indicator_name']}: {signal['signal_type']} "
+                f"(Strength: {signal['strength_percent']}%, "
+                f"Confidence: {signal['confidence_level']})"
+            )
+        sections.append("📑 *Technical Signals*\n" + "\n".join(signals) + "\n")
 
     # Market Condition
-    if "market_condition" in ta_dict:
-        sections.append(f"⚠️ *Market Condition*\n• {safe_get('market_condition')}\n")
+    market_info = [
+        "⚠️ *Market Condition*\n",
+        f"• Phase: {market_condition['market_phase']}",
+        f"• Volatility: {market_condition['volatility_percent']}%",
+        f"• Trend Strength: {market_condition['trend_strength_percent']}%",
+        f"• Volume Analysis: {market_condition['volume_analysis']}",
+        f"• Risk Level: {market_condition['risk_level_percent']}%\n",
+    ]
+    sections.append("\n".join(market_info))
 
     # Support and Resistance
-    if "snr_channels" in ta_dict:
+    snr_data = ta_dict["support_resistance_levels"]
+    if snr_data.get("active_channels"):
         snr_info = ["🎯 *Support & Resistance Channels*\n"]
-        for channel in ta_dict["snr_channels"]:
+        for channel in snr_data["active_channels"]:
             snr_info.append(
-                f"• 📈 Level: ${format_float(channel.get('support'))} - ${format_float(channel.get('resistance'))}"
+                f"• 📈 {channel['type'].replace('_', ' ').title()}: "
+                f"${format_float(channel['channel_start'])} - ${format_float(channel['channel_end'])}"
             )
         sections.append("\n".join(snr_info) + "\n")
 
     # Fibonacci Levels
-    if "fibonacci_levels" in ta_dict:
+    if ta_dict.get("fibonacci_levels"):
         fib_info = ["🌀 *Fibonacci Levels*\n"]
-        for ratio, level in ta_dict["fibonacci_levels"].items():
-            fib_info.append(f"• {float(ratio):.3f}: ${format_float(level)}")
+        for level in ta_dict["fibonacci_levels"]:
+            fib_info.append(f"• {level['level']}: ${format_float(level['price'])}")
         sections.append("\n".join(fib_info) + "\n")
 
-    # Combine all sections with double line breaks
+    # Combine all sections
     message = "\n".join(sections)
 
     # Add disclaimer

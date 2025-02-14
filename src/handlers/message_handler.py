@@ -1,4 +1,6 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+import io
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, Update
 from telegram.constants import ChatAction, ChatType, ParseMode
 from telegram.ext import ContextTypes
 
@@ -91,27 +93,80 @@ class MessageManager:
 
         query = update.message.text
 
-        await context.bot.send_chat_action(
-            chat_id=update.effective_chat.id, action="typing"
-        )
-
         analyzing_message = await update.message.reply_text(
             "🔍 Analyzing the coin\\.\\.\\.", parse_mode=ParseMode.MARKDOWN_V2
         )
 
-        success, text, plots = self.api_service.get_analysis(query)
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id, action=ChatAction.TYPING
+        )
 
-        await analyzing_message.delete()
+        message = update.effective_message.text.strip()
+        if message.startswith("/"):
+            message = " ".join(message.split()[1:])
 
-        text = markdownify(text)
-
-        if not success:
-            await update.message.reply_text(
-                f"❌ {text}", parse_mode=ParseMode.MARKDOWN_V2
+        if not message:
+            await analyzing_message.delete()
+            await update.effective_message.reply_text(
+                "❌ Please provide a cryptocurrency name or symbol.",
+                parse_mode=ParseMode.MARKDOWN,
             )
             return
 
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
+        success, text, plot_hashes = self.api_service.get_analysis(query)
+
+        await analyzing_message.delete()
+
+        if not success:
+            await update.message.reply_text(
+                f"❌ {markdownify(text)}",
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_to_message_id=update.effective_message.id,
+                reply_markup=get_inline_coin_keyboard(update=update),
+            )
+            return
+        messages = split_markdown(text)
+        last_message_id = update.effective_message.id
+        total_messages = len(messages)
+        for idx, message in enumerate(messages):
+            message_data = await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdownify(message),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=get_inline_coin_keyboard()
+                if idx == (total_messages - 1)
+                else None,
+            )
+            last_message_id = message_data.message_id
+
+        if success and plot_hashes and isinstance(plot_hashes, list):
+            try:
+                media = []
+
+                for hash_string in plot_hashes:
+                    image_data = self.api_service.get_plot_image(hash_string)
+                    if image_data:
+                        await context.bot.send_chat_action(
+                            chat_id=update.effective_chat.id,
+                            action=ChatAction.UPLOAD_PHOTO,
+                        )
+                        media.append(InputMediaPhoto(io.BytesIO(image_data)))
+
+                if media:
+                    await context.bot.send_media_group(
+                        chat_id=update.effective_chat.id,
+                        media=media,
+                        reply_to_message_id=last_message_id,
+                    )
+
+            except Exception as e:
+                logger.error(f"Error handling plots: {str(e)}")
+                await update.message.reply_text(
+                    markdownify(
+                        "❌ Sorry, there was an error displaying the analysis plots."
+                    ),
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                )
 
     async def confidence_inference(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
