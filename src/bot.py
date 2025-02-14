@@ -2,10 +2,10 @@ from pathlib import Path
 
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     MessageHandler,
     PicklePersistence,
     filters,
-    CallbackQueryHandler,
 )
 
 from src.core.cofig import settings

@@ -1,6 +1,6 @@
 from functools import partial
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ChatType, ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -20,16 +20,19 @@ class CommandManager:
         application.add_handler(
             CommandHandler(Commands.START.value, self._start_command)
         )
-        
 
         application.add_handler(CommandHandler(Commands.HELP.value, self._help_command))
+
+        application.add_handler(
+            CommandHandler(Commands.ABOUT.value,self.about_command)
+        )
+
         application.add_handler(
             CommandHandler(Commands.CHECK_MODE.value, self.check_mode)
         )
         application.add_handler(
             CommandHandler(Commands.STOP_MODE.value, self.remove_mode)
         )
-       
 
         # Modes
         application.add_handler(
@@ -112,7 +115,48 @@ class CommandManager:
             "_Use the buttons below for quick access:_"
         )
 
-        await update.message.reply_text(markdownify(help_message), parse_mode=ParseMode.MARKDOWN_V2)
+        await update.message.reply_text(
+            markdownify(help_message), parse_mode=ParseMode.MARKDOWN_V2
+        )
+
+    async def about_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Show information about the bot.
+
+        Command: /about
+        Description: Displays information about the bot's features and capabilities.
+        """
+        about_text = (
+            "🤖 *Crypto Trading Bot*\n\n"
+            "This bot helps you trade cryptocurrencies using advanced AI predictions "
+            "and market analysis\\.\n\n"
+            "*Features*:\n"
+            "• AI\\-powered trading signals\n"
+            "• Real\\-time market data\n\n"
+            "*Version*: v1\\.0\\.0\n"
+            "*Website*: [Visit Here](https://www.projectnostradamus.com/)\n"
+            "*Coin*: [check this out](https://www.coingecko.com/en/coins/project-nostradamus)\n\n"
+            "*Disclaimer*: Trading cryptocurrencies involves substantial risk\\. "
+            "Always do your own research before making investment decisions\\."
+        )
+
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "🌐 Nostradamus", url="https://www.projectnostradamus.com/"
+                ),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.effective_message.reply_text(
+            text=markdownify(about_text),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=reply_markup,
+        )
+
+    #-----------------------Mode related-------------------------------
 
     async def command_activate(
         self,
@@ -157,7 +201,6 @@ class CommandManager:
 
         context.user_data["mode"] = mode
 
-    
     async def check_mode(
         self,
         update: Update,
@@ -174,7 +217,7 @@ class CommandManager:
             text=markdownify(message),
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=get_inline_coin_keyboard(),
-        )    
+        )
 
     async def remove_mode(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
