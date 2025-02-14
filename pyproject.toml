@@ -8,7 +8,7 @@ package-mode = false
 python = "^3.12"
 pydantic = "^2.10.6"
 pydantic-settings = "^2.7.1"
-python-telegram-bot = "^21.10"
+python-telegram-bot = {extras = ["job-queue"], version = "^21.10"}
 requests = "^2.32.3"
 telegramify-markdown = {extras = ["mermaid"], version = "^0.4.2"}
 markdown-it-py = "^3.0.0"

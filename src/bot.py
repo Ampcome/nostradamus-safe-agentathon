@@ -21,7 +21,7 @@ class CryptoAnalysisBot:
     def __init__(self):
         self.application = self._build_application()
 
-        self.__set__hadlers()
+        self._set__hadlers()
 
     def _build_application(self):
         percistance_file_path = Path(settings.BOT_PERCISTANCE_FILE_PATH)
@@ -41,7 +41,7 @@ class CryptoAnalysisBot:
 
         return application
 
-    def __set__hadlers(self):
+    def _set__hadlers(self):
         self.application.add_error_handler(error_handler)
         commad_manager.set_handlers(self.application)
 
@@ -52,6 +52,11 @@ class CryptoAnalysisBot:
         )
         self.application.add_handler(
             CallbackQueryHandler(commad_manager.remove_mode, pattern="stop_mode")
+        )
+
+        #  Initialize bot jobs
+        self.application.job_queue.run_once(
+            commad_manager.setup_commands, when=settings.SCHEDULER_TIMOUT
         )
 
     def run(self):

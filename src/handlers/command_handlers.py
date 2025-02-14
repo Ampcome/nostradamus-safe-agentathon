@@ -11,7 +11,10 @@ from src.keyboard.inline_keyboard import (
 )
 from src.models.commands import Commands
 from src.models.modes import Modes
+from src.utils.logger import get_logger
 from src.utils.string_formatters import markdownify
+
+logger = get_logger(__name__)
 
 
 class CommandManager:
@@ -24,7 +27,11 @@ class CommandManager:
         application.add_handler(CommandHandler(Commands.HELP.value, self._help_command))
 
         application.add_handler(
-            CommandHandler(Commands.ABOUT.value,self.about_command)
+            CommandHandler(Commands.ABOUT.value, self.about_command)
+        )
+
+        application.add_handler(
+            CommandHandler(Commands.NOSTRADAMUS.value, self.noustradamus)
         )
 
         application.add_handler(
@@ -74,6 +81,8 @@ class CommandManager:
             )
         )
 
+    # -----------------------Commands-------------------------------
+
     async def _start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /start command"""
         welcome_message = (
@@ -84,6 +93,7 @@ class CommandManager:
             "• /technical - Get technical analysis\n"
             "• /crypto_info - Get detailed coin information\n"
             "• /confidence - Get AI confidence score\n"
+            "• /nostradamus - Learn about Nostradamus\n"
             "• /price - Get recent price information\n"
             "💡 *Utilities*\n"
             "• /mode - Check current mode\n"
@@ -103,6 +113,7 @@ class CommandManager:
             "• /start - Start the bot\n"
             "• /help - Show this help message\n"
             "• /about - About this bot\n"
+            "• /nostradamus - Learn about Nostradamus\n\n"
             "*AI & Analysis*\n"
             "• /crypto - Get AI-powered crypto analysis\n"
             "• /technical - Get technical analysis\n"
@@ -156,7 +167,34 @@ class CommandManager:
             reply_markup=reply_markup,
         )
 
-    #-----------------------Mode related-------------------------------
+    async def noustradamus(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Nostradamus command - displays information about Nostradamus."""
+        text = (
+            "🤖 *Nostradamus*\n\n"
+            "Nostradamus is an AI-powered trading agent that provides actionable insights, "
+            "real-time chart evaluations, and data-driven recommendations "
+            "for smarter trading.\n\n"
+            "It leverages advanced machine learning and market data to analyze trends, "
+            "identify patterns, and helps traders stay ahead with informed decisions.\n"
+            "Trade with confidence."
+        )
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "🌐 Nostradamus", url="https://www.projectnostradamus.com/"
+                )
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(
+            markdownify(text),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=reply_markup,
+        )
+
+    # -----------------------Mode Config-------------------------------
 
     async def command_activate(
         self,
@@ -249,6 +287,31 @@ class CommandManager:
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=get_inline_coin_keyboard(include_switch_normal=False),
             )
+
+    # -----------------------Initial Commands-------------------------------
+    async def setup_commands(self, application: Application) -> None:
+        """Set up the bot commands menu."""
+        commands = [
+            # Basic Commands
+            (Commands.START.value, "🤖 Start the bot"),
+            (Commands.HELP.value, "❓ Show help message"),
+            (Commands.ABOUT.value, "📖 About this bot"),
+            (Commands.NOSTRADAMUS.value, "🌟 About Nostradamus"),
+            # Analysis Commands
+            (Commands.CRYPTO_ENABLE.value, "📊 Get AI crypto analysis"),
+            (Commands.TECHNICALS_ENABLE.value, "📈 Get technical analysis"),
+            (Commands.CONFIDENCE_ENABLE.value, "🎯 Get confidence score"),
+            (Commands.CRYPTOINFO_ENABLE.value, "📈 Get coin information"),
+            (Commands.PRICE_ENABLE.value, "📊 Get recent price information"),
+            # Utility Commands
+            (Commands.CHECK_MODE.value, "🔍 Check current mode"),
+            (Commands.STOP_MODE.value, "⏹️ Stop current mode"),
+        ]
+        try:
+            await application.bot.set_my_commands(commands)
+            logger.info("Bot commands menu setup completed successfully")
+        except Exception as e:
+            logger.exception(f"Failed to set up bot commands menu: {e!r}")
 
 
 commad_manager = CommandManager()

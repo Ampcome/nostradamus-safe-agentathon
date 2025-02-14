@@ -14,6 +14,10 @@ class Settings(BaseSettings):
         "bot_data", description="Path to bot persistence file"
     )
 
+    SCHEDULER_TIMOUT: int = Field(
+        default=10, description="Timout for the scheduler in seconds"
+    )
+
     # API Settings
     API_BASE_URL: str = Field(
         ...,

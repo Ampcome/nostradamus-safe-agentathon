@@ -12,6 +12,7 @@ class Commands(str, Enum):
     ABOUT = "about"
     STOP_MODE = "stop_mode"
     CHECK_MODE = "mode"
+    NOSTRADAMUS = "nostradamus"
 
     # Trading commands
     CRYPTO_ENABLE = "crypto"
