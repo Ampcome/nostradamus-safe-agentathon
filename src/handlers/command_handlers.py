@@ -42,11 +42,14 @@ class CommandManager:
         application.add_handler(
             CommandHandler(
                 Commands.CONFIDENCE_ENABLE.value,
-                partial(
-                    self.command_activate,
-                    mode=Modes.CONFIDENCE,
-                    example="ETH",
-                ),
+                partial(self.command_activate, mode=Modes.CONFIDENCE, example="ETH"),
+            )
+        )
+
+        application.add_handler(
+            CommandHandler(
+                Commands.TECHNICALS_ENABLE.value,
+                partial(self.command_activate, mode=Modes.TECHNICAL, example="BTC"),
             )
         )
 
