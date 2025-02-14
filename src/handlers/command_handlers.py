@@ -53,6 +53,13 @@ class CommandManager:
             )
         )
 
+        application.add_handler(
+            CommandHandler(
+                Commands.CRYPTOINFO_ENABLE.value,
+                partial(self.command_activate, mode=Modes.CRYPTO_INFO, example="SOL"),
+            )
+        )
+
     async def _start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /start command"""
         welcome_message = (

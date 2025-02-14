@@ -75,3 +75,24 @@ class AnalysisAPIService:
                 False,
                 "Sorry, there was an error connecting to the analysis service.",
             )
+
+    def get_crypto_info(self, symbol: str) -> Tuple[bool, dict | str]:
+        """
+        Fetch crypto_info from the API
+        Returns: (success, text)
+        """
+        try:
+            response = requests.post(
+                f"{self.base_url}/crypto_info",
+                json={"symbol": symbol},
+                headers=self.headers,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success"), data.get("text")
+        except requests.RequestException as e:
+            logging.error(f"API Error: {str(e)}")
+            return (
+                False,
+                "Sorry, there was an error connecting to the analysis service.",
+            )

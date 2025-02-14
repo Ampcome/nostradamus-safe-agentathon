@@ -11,6 +11,7 @@ pydantic-settings = "^2.7.1"
 python-telegram-bot = "^21.10"
 requests = "^2.32.3"
 telegramify-markdown = {extras = ["mermaid"], version = "^0.4.2"}
+markdown-it-py = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.9.6"

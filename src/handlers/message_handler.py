@@ -7,6 +7,7 @@ from src.models.confidace_score import ConfidenceScore
 from src.models.modes import Modes
 from src.services.api_service import AnalysisAPIService
 from src.utils.logger import get_logger
+from src.utils.markdown import split_markdown
 from src.utils.string_formatters import (
     format_confidence_score,
     format_technical_analysis,
@@ -43,6 +44,7 @@ class MessageManager:
             Modes.CRYPTO: self.handle_analysis_query,
             Modes.CONFIDENCE: self.confidence_inference,
             Modes.TECHNICAL: self.technical_inference,
+            Modes.CRYPTO_INFO: self.crypto_info,
         }
 
         hanndler = handlers.get(mode, self.handle_analysis_query)
@@ -144,6 +146,7 @@ class MessageManager:
             success, data = self.api_service.get_confidence_score(symbol=symbol)
 
             if not success:
+                await reply_message.delete()
                 await update.message.reply_text(
                     markdownify(f"❌ {data}"), parse_mode=ParseMode.MARKDOWN_V2
                 )
@@ -198,6 +201,7 @@ class MessageManager:
             success, data = self.api_service.get_technical_analysis(symbol=symbol)
 
             if not success:
+                await reply_message.delete()
                 await update.message.reply_text(
                     markdownify(f"❌ {data}"), parse_mode=ParseMode.MARKDOWN_V2
                 )
@@ -211,6 +215,55 @@ class MessageManager:
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=get_inline_coin_keyboard(),
             )
+
+        except Exception as e:
+            raise e
+
+    async def crypto_info(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Get Crypto information"""
+        reply_message = await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="🔍 Analyzing the coin...",
+            reply_to_message_id=update.effective_message.id,
+        )
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id, action=ChatAction.TYPING
+        )
+        symbol = update.effective_message.text.strip()
+        if symbol.startswith("/"):
+            symbol = " ".join(symbol.split()[1:])
+
+        if not symbol:
+            await context.bot.send_message(
+                text="❌ please add a coin",
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                reply_markup=get_inline_coin_keyboard(update=update),
+            )
+            return
+        try:
+            success, text = self.api_service.get_crypto_info(symbol)
+            if not success:
+                await reply_message.delete()
+                await update.message.reply_text(
+                    markdownify(f"❌ {text}"), parse_mode=ParseMode.MARKDOWN_V2
+                )
+                return
+
+            await reply_message.delete()
+            messages = split_markdown(text, chunk_size=4000)
+            total_messages = len(messages)
+            for idx, message_part in enumerate(messages):
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=markdownify(message_part),
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    reply_markup=get_inline_coin_keyboard()
+                    if idx == (total_messages - 1)
+                    else None,
+                )
 
         except Exception as e:
             raise e
