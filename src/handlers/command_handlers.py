@@ -83,27 +83,80 @@ class CommandManager:
 
     # -----------------------Commands-------------------------------
 
-    async def _start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /start command"""
-        welcome_message = (
-            "👋 Welcome to the Crypto Analysis Bot! \n\n"
-            "I'm your AI-powered crypto trading assistant. Here's what I can do:\n\n"
-            "🤖 *AI & Analysis*\n"
-            "• /crypto - Get AI-powered crypto analysis\n"
-            "• /technical - Get technical analysis\n"
-            "• /crypto_info - Get detailed coin information\n"
-            "• /confidence - Get AI confidence score\n"
-            "• /nostradamus - Learn about Nostradamus\n"
-            "• /price - Get recent price information\n"
-            "💡 *Utilities*\n"
-            "• /mode - Check current mode\n"
-            "• /stop_mode - Stop current mode\n\n"
-            "Type /help to see all commands!"
-        )
-        await update.message.reply_text(
-            markdownify(welcome_message),
-            parse_mode=ParseMode.MARKDOWN_V2,
-        )
+    async def _start_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Start command - registers new users and sends welcome message.
+
+        Command: /start
+        Description: Initializes the bot for new users and displays welcome information.
+        """
+        try:
+            user = update.effective_user
+            chat_type = update.effective_chat.type
+
+            # Different welcome messages for private chats and groups
+            if chat_type == ChatType.PRIVATE:
+                welcome_text = (
+                    f"👋 Welcome {user.first_name}!\n\n"
+                    "I'm your AI-powered crypto trading assistant. Here's what I can do:\n\n"
+                    "🤖 *AI & Analysis*\n"
+                    "• /crypto - Get AI-powered crypto analysis\n"
+                    "• /technical - Get technical analysis\n"
+                    "• /crypto_info - Get detailed coin information\n"
+                    "• /confidence - Get AI confidence score\n"
+                    "• /nostradamus - Learn about Nostradamus\n"
+                    "• /price - Get recent price information\n"
+                    "💡 *Utilities*\n"
+                    "• /mode - Check current mode\n"
+                    "• /stop_mode - Stop current mode\n\n"
+                    "Type /help to see all commands!"
+                )
+                keyboard = [
+                    [
+                        InlineKeyboardButton(
+                            "🤖 Start Analysis", callback_data="crypto"
+                        ),
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "🌐 Nostradamus",
+                            url="https://www.projectnostradamus.com/",
+                        ),
+                        InlineKeyboardButton(
+                            "💬 Add to Group",
+                            url=f"https://t.me/{context.bot.username}?startgroup=true",
+                        ),
+                    ],
+                ]
+            else:
+                welcome_text = (
+                    "👋 Hi everyone!\n\n"
+                    "I'm a crypto trading bot with AI capabilities.\n"
+                    "Use /help to see what I can do!"
+                )
+                keyboard = [
+                    [
+                        InlineKeyboardButton(
+                            "🌐 Nostradamus",
+                            url="https://www.projectnostradamus.com/",
+                        ),
+                    ],
+                ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await update.message.reply_text(
+                markdownify(welcome_text),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=reply_markup,
+            )
+
+        except Exception as e:
+            logger.error("Error in start command: %s", e)
+            await update.message.reply_text(
+                "❌ An error occurred while starting the bot. Please try again later.",
+                parse_mode=ParseMode.MARKDOWN,
+            )
 
     async def _help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /help command"""
@@ -222,11 +275,7 @@ class CommandManager:
             await update.callback_query.answer()
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=markdownify(
-                    message,
-                    max_line_length=None,
-                    normalize_whitespace=False,
-                ),
+                text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=command_inline_coin_keyboard(),
             )
@@ -314,4 +363,4 @@ class CommandManager:
             logger.exception(f"Failed to set up bot commands menu: {e!r}")
 
 
-commad_manager = CommandManager()
+command_manager = CommandManager()

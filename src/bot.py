@@ -10,7 +10,8 @@ from telegram.ext import (
 
 from src.core.cofig import settings
 from src.handlers import error_handler
-from src.handlers.command_handlers import commad_manager
+from src.handlers.callback_qery_handlers import ai_button_handler
+from src.handlers.command_handlers import command_manager
 from src.handlers.message_handler import message_handler
 from src.utils.logger import get_logger
 
@@ -43,20 +44,18 @@ class CryptoAnalysisBot:
 
     def _set__hadlers(self):
         self.application.add_error_handler(error_handler)
-        commad_manager.set_handlers(self.application)
+        command_manager.set_handlers(self.application)
 
         self.application.add_handler(
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND, message_handler.handle_private_message
             )
         )
-        self.application.add_handler(
-            CallbackQueryHandler(commad_manager.remove_mode, pattern="stop_mode")
-        )
+        self.application.add_handler(CallbackQueryHandler(ai_button_handler))
 
         #  Initialize bot jobs
         self.application.job_queue.run_once(
-            commad_manager.setup_commands, when=settings.SCHEDULER_TIMOUT
+            command_manager.setup_commands, when=settings.SCHEDULER_TIMOUT
         )
 
     def run(self):
