@@ -2,15 +2,18 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ChatAction, ChatType, ParseMode
 from telegram.ext import ContextTypes
 
+from src.keyboard.inline_keyboard import get_inline_coin_keyboard
 from src.models.confidace_score import ConfidenceScore
 from src.models.modes import Modes
 from src.services.api_service import AnalysisAPIService
 from src.utils.logger import get_logger
-from src.utils.string_formatters import format_confidence_score, markdownify
+from src.utils.string_formatters import (
+    format_confidence_score,
+    format_technical_analysis,
+    markdownify,
+)
 
 logger = get_logger(__name__)
-
-BUY_AMEN_LINK = "https://www.coingecko.com/en/coins/project-nostradamus"
 
 
 class MessageManager:
@@ -39,6 +42,7 @@ class MessageManager:
         handlers = {
             Modes.CRYPTO: self.handle_analysis_query,
             Modes.CONFIDENCE: self.confidence_inference,
+            Modes.TECHNICAL: self.technical_inference,
         }
 
         hanndler = handlers.get(mode, self.handle_analysis_query)
@@ -67,13 +71,13 @@ class MessageManager:
             await update.callback_query.message.reply_text(
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.get_inline_coin_keyboard(include_switch_normal=False),
+                reply_markup=get_inline_coin_keyboard(include_switch_normal=False),
             )
         else:
             await update.effective_message.reply_text(
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.get_inline_coin_keyboard(include_switch_normal=False),
+                reply_markup=get_inline_coin_keyboard(include_switch_normal=False),
             )
 
     async def handle_analysis_query(
@@ -132,7 +136,7 @@ class MessageManager:
                 text="❌ please add a coin",
                 chat_id=update.effective_chat.id,
                 reply_to_message_id=update.effective_message.id,
-                reply_markup=self.get_inline_coin_keyboard(update=update),
+                reply_markup=get_inline_coin_keyboard(update=update),
             )
             return
 
@@ -153,47 +157,63 @@ class MessageManager:
                 chat_id=update.effective_chat.id,
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.get_inline_coin_keyboard(),
+                reply_markup=get_inline_coin_keyboard(),
             )
 
         except Exception as e:
             raise e
 
-    def get_inline_coin_keyboard(
-        self,
-        update: Update | None = None,
-        *,
-        include_switch_normal: bool = True,
-    ) -> InlineKeyboardMarkup:
-        """Get inline keyboard for the messages
+    async def technical_inference(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Handle inference for confidence mode messages
 
         Args:
-            symbol (str | None): symbol of the coin
-            coin_url (str | None): coin buy url to redirect
-            include_switch_normal (bool): include the switch normal thing
-
-        Returns:
-            InlineKeyboardMarkup: the keyboard object
+            update: The update object from Telegram
+            context: The context object from Telegram
         """
-        keyboard = [
-            [
-                InlineKeyboardButton("Buy $AMEN", url=BUY_AMEN_LINK),
-            ],
-        ]
-        if include_switch_normal and (
-            (not update) or update.effective_chat.type == ChatType.PRIVATE
-        ):
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "Switch to Normal Mode", callback_data="stop_mode"
-                    )
-                ]
+        reply_message = await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="🔍 Analyzing the coin...",
+            reply_to_message_id=update.effective_message.id,
+        )
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id, action=ChatAction.TYPING
+        )
+
+        symbol = update.effective_message.text.strip()
+        if symbol.startswith("/"):
+            symbol = " ".join(symbol.split()[1:])
+
+        if not symbol:
+            await context.bot.send_message(
+                text="❌ please add a coin",
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                reply_markup=get_inline_coin_keyboard(update=update),
+            )
+            return
+
+        try:
+            success, data = self.api_service.get_technical_analysis(symbol=symbol)
+
+            if not success:
+                await update.message.reply_text(
+                    markdownify(f"❌ {data}"), parse_mode=ParseMode.MARKDOWN_V2
+                )
+                return
+
+            message = format_technical_analysis(data)
+            await reply_message.delete()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdownify(message),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=get_inline_coin_keyboard(),
             )
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        return reply_markup
+        except Exception as e:
+            raise e
 
 
 message_handler = MessageManager()

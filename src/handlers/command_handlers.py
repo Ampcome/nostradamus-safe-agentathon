@@ -5,6 +5,10 @@ from telegram.constants import ChatType, ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from src.handlers.message_handler import message_handler
+from src.keyboard.inline_keyboard import (
+    command_inline_coin_keyboard,
+    get_inline_coin_keyboard,
+)
 from src.models.commands import Commands
 from src.models.modes import Modes
 from src.utils.string_formatters import markdownify
@@ -118,11 +122,13 @@ class CommandManager:
                     normalize_whitespace=False,
                 ),
                 parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=command_inline_coin_keyboard(),
             )
         else:
             await update.message.reply_text(
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=command_inline_coin_keyboard(),
             )
 
         context.user_data["mode"] = mode
@@ -149,17 +155,13 @@ class CommandManager:
             await update.callback_query.message.reply_text(
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=message_handler.get_inline_coin_keyboard(
-                    include_switch_normal=False
-                ),
+                reply_markup=get_inline_coin_keyboard(include_switch_normal=False),
             )
         else:
             await update.effective_message.reply_text(
                 text=markdownify(message),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=message_handler.get_inline_coin_keyboard(
-                    include_switch_normal=False
-                ),
+                reply_markup=get_inline_coin_keyboard(include_switch_normal=False),
             )
 
 
