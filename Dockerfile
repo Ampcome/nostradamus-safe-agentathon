@@ -12,18 +12,8 @@ RUN wget -O- https://install.python-poetry.org | POETRY_HOME=/opt/poetry python 
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
 
-# Download and install `ta-lib`
-RUN wget https://github.com/ta-lib/ta-lib/archive/refs/tags/v0.6.1.tar.gz -O ta-lib.tar.gz && \
-    tar -xzf ta-lib.tar.gz && \
-    cd ta-lib-0.6.1  && \
-    chmod +x autogen.sh && ./autogen.sh && \
-    ./configure --prefix=/usr --build=aarch64-unknown-linux-gnu && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf ta-lib-0.6.1 ta-lib.tar.gz
-
-COPY ./pyproject.toml ./poetry.lock* ./src main.py /app/
+COPY ./pyproject.toml ./poetry.lock* main.py /app/
+COPY ./src /app/src/
 
 RUN poetry install
 
