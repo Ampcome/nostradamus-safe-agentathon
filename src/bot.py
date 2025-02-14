@@ -5,6 +5,7 @@ from telegram.ext import (
     MessageHandler,
     PicklePersistence,
     filters,
+    CallbackQueryHandler,
 )
 
 from src.core.cofig import settings
@@ -45,7 +46,12 @@ class CryptoAnalysisBot:
         commad_manager.set_handlers(self.application)
 
         self.application.add_handler(
-            MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_message)
+            MessageHandler(
+                filters.TEXT & ~filters.COMMAND, message_handler.handle_private_message
+            )
+        )
+        self.application.add_handler(
+            CallbackQueryHandler(commad_manager.remove_mode, pattern="stop_mode")
         )
 
     def run(self):
